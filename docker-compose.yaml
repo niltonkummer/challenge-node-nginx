@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: node
+    container_name: app
+    env_file:
+      - ./node/.env
+    networks:
+      - nodenet
+    tty: true
+    depends_on:
+      - db
+    ports:
+      - 3000:3000
+
+  db:
+    image: mysql:5.7
+    container_name: db
+    restart: always
+    tty: true
+    command:  "--innodb-use-native-aio=0"
+    volumes:
+      - db:/var/lib/mysql:rw
+      - ./mysql/scripts/:/docker-entrypoint-initdb.d/:ro
+    environment:
+      MYSQL_DATABASE: 'nodedb'
+      MYSQL_ROOT_PASSWORD: 'mysql_pass'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_USER: 'nodeuser'
+      MYSQL_PASSWORD: 'pass'
+    networks:
+      - nodenet
+
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    networks:
+      - nodenet
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+
+volumes:
+  db:
+    driver: local
+
+networks:
+  nodenet:   
+    driver: bridge
