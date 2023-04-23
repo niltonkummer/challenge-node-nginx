@@ -9,8 +9,6 @@ services:
       - ./node/.env
     networks:
       - nodenet
-    #volumes:
-    #  - ./node:/usr/src/app
     tty: true
     depends_on:
       - db
@@ -18,16 +16,20 @@ services:
       - 3000:3000
 
   db:
-    build:
-      context: mysql
+    image: mysql:5.7
     container_name: db
     restart: always
     tty: true
+    command:  "--innodb-use-native-aio=0"
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - db:/var/lib/mysql:rw
+      - ./mysql/scripts/:/docker-entrypoint-initdb.d/:ro
     environment:
-      - MYSQL_DATABASE=nodedb
-      - MYSQL_ROOT_PASSWORD=mysql_pass      
+      MYSQL_DATABASE: 'nodedb'
+      MYSQL_ROOT_PASSWORD: 'mysql_pass'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_USER: 'nodeuser'
+      MYSQL_PASSWORD: 'pass'
     networks:
       - nodenet
 
@@ -41,6 +43,10 @@ services:
       - "8080:80"
     depends_on:
       - app
+
+volumes:
+  db:
+    driver: local
 
 networks:
   nodenet:   
