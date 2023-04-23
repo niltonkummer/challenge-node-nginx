@@ -2,4 +2,5 @@
 
 ### How to run
 ```
-doc
+docker-compose up --build -d
+```
